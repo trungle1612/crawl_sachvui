@@ -1,4 +1,5 @@
 defmodule Crawler.SachVui.CategoryDetail do
+  alias Crawler.SachVui.Base
   def all_link do
     category_page()
     |> Enum.map(&link_book_per_page(&1))
@@ -8,7 +9,7 @@ defmodule Crawler.SachVui.CategoryDetail do
 
   def link_book_per_page(url) do
     IO.puts "Reading url: #{url}"
-    {status, body} = read_url(url)
+    {status, body} = Base.read_url(url)
 
     if status == :ok do
       {:ok, document} = Floki.parse_document(body)
@@ -17,17 +18,6 @@ defmodule Crawler.SachVui.CategoryDetail do
       |> Enum.map(&format_elm(&1))
     else
       IO.puts "Error"
-    end
-  end
-
-  defp read_url(url) do
-    case HTTPoison.get url do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, body}
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        {:error, nil}
-      {:error, _} ->
-        {:error, nil}
     end
   end
 
