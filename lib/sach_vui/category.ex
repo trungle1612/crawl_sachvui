@@ -1,25 +1,22 @@
 defmodule Crawler.SachVui.Category do
+  alias Crawler.SachVui.Base
   @url "https://sachvui.com/"
   @file_path "data/category.txt"
 
-  def scraper do
-    case HTTPoison.get @url do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        body
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
-        nil
-    end
-  end
-
   def parse do
-    {:ok, document} = Floki.parse_document(scraper())
-    # [{tag, link, text}]
-    Floki.find(document, "body > div.container > div.jumbotron.trangchu > ul > li")
-    |> Stream.map(&Floki.find(&1, "a"))
-    |> Enum.map(fn x ->
-      [{_tag, link, text}] = x
-      get_url_and_title{link, text}
-    end)
+    {status, body} = Base.read_url(@url)
+
+    if status == :ok do
+      {:ok, document} = Floki.parse_document(body)
+      Floki.find(document, "body > div.container > div.jumbotron.trangchu > ul > li")
+      |> Stream.map(&Floki.find(&1, "a"))
+      |> Enum.map(fn x ->
+        [{_tag, link, text}] = x
+        get_url_and_title{link, text}
+      end)
+    else
+      IO.puts "Error"
+    end
   end
 
   def write_file do
@@ -31,9 +28,11 @@ defmodule Crawler.SachVui.Category do
         _ -> "Faild"
       end
     end)
+
+    File.close(file)
   end
 
-  def get_url_and_title(row) do
+  defp get_url_and_title(row) do
     {link, text } = row
     [{_tag, url}] = link
     [_, title] = text
