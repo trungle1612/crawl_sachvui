@@ -36,25 +36,28 @@ defmodule Crawler.SachVui.BookContent do
 
   def list_chapter(chap_one) do
     {:ok, body} = Base.read_url(chap_one)
-    {:ok, document} = Floki.parse_document(body)
+    {status, document} = Floki.parse_document(body)
+    selector = "body > div.container > div.doc-online > div:nth-child(5) > div > ul > li"
+    selector = "body > div.container > div.doc-online > div:nth-child(5) > div > ul > li > a"
 
     Floki.find(document, "body > div.container > div.doc-online > div:nth-child(5) > div > ul > li > a")
     |> Enum.map(&parse_chap_info/1)
   end
 
   defp parse_chap_info(chap) do
-    {_, [{_, url}], [title]} =  chap
+    [url] = Floki.attribute(chap, "href")
+    title = Floki.text(chap)
 
     chap_detail(title, url)
   end
 
-  defp chap_detail(chap, url) do
-    chap =  String.split(chap, ":") |> Enum.map(&String.trim/1)
-    [chap_number, chap_name] = case chap do
+  defp chap_detail(title, url) do
+    title =  String.split(title, ":", parts: 2) |> Enum.map(&String.trim/1)
+    [chap_number, chap_name] = case title do
       [_] ->
-        ["", List.first(chap)]
-      [_, _] ->
-        chap
+        ["", List.first(title)]
+      _ ->
+        title
     end
 
     content = content_chap(url)
