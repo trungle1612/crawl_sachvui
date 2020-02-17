@@ -13,7 +13,7 @@ defmodule Crawler.SachVui.Book do
 
   defp parse_info(url, photo) do
     {status, body} = Base.read_url(url)
-    IO.write("Reading: #{url}")
+    IO.write("Reading: #{url}\n")
 
     if status == :ok do
       {:ok, document} = Floki.parse_document(body)
